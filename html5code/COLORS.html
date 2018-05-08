@@ -1,0 +1,75 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+
+html { margin: 0; padding: 0; }
+body { background: #000; color: #fff; padding: 0px; margin: 0; }
+button { display: inline; width: 49vw; height: 30vh; box-sizing: border-box; background-color: #ff0; color: #000; border: 0; margin: 0; padding: 0; }
+button#a { background-color: #f00; }
+button#b { background-color: #0f0; }
+button#c { background-color: #00f; }
+button#d { background-color: #ccc; }
+div#debug {
+    padding: 20px;
+    color: #666;
+}
+</style>
+</head>
+<body>
+<button id="a">A</button>
+<button id="b">B</button>
+<button id="c">C</button>
+<button id="d">D</button>
+<div id="debug">
+    ACC: <span id="r1">0</span> <span id="r2">0</span> <span id="r3">0</span>
+</div>
+<script type="text/javascript">
+
+var MODE = 'colors';
+var lx, ly, lr;
+var ws;
+
+function clickbutton(id) {
+    ws.send(JSON.stringify({mode: MODE, button:id}));
+
+    document.getElementById(id).style.backgroundColor = '#fff';
+    setTimeout(() => {
+        document.getElementById(id).style.backgroundColor = '';
+    }, 300);
+}
+
+window.addEventListener('load', () => {
+    document.getElementById('a').addEventListener('click', () => clickbutton('a'));
+    document.getElementById('b').addEventListener('click', () => clickbutton('b'));
+    document.getElementById('c').addEventListener('click', () => clickbutton('c'));
+    document.getElementById('d').addEventListener('click', () => clickbutton('d'));
+
+    ws = new WebSocket('ws://stagecast.se/api/events/livehacks/ws?x-user-listener=1');
+
+    if (window.DeviceOrientationEvent) {
+        window.addEventListener("deviceorientation", event => {
+            var r = Math.round(event.alpha);
+            var x = Math.round(event.gamma);
+            var y = Math.round(event.beta);
+
+            if (r != lr || y!= ly || x != lx) {
+                lx = x;
+                ly = y;
+                lr = r;
+
+                document.getElementById('r1').innerText = r;
+                document.getElementById('r2').innerText = x;
+                document.getElementById('r3').innerText = y;
+
+                ws.send(JSON.stringify({mode: MODE, rawacc:[r, x, y]}));
+            }
+        }, true);
+    }
+});
+
+
+
+</script>
+</body>
+</html>
